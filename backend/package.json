@@ -29,12 +29,15 @@
         "typescript": "^6.0.3"
     },
     "dependencies": {
+        "@prisma/adapter-pg": "^7.10.0",
         "@prisma/client": "^7.10.0",
+        "@types/pg": "^8.23.1",
         "argon2": "^0.45.1",
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.6",
         "express": "^5.2.1",
         "helmet": "^8.3.0",
+        "pg": "^8.23.0",
         "zod": "^4.6.5"
     }
 }

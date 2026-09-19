@@ -4,6 +4,7 @@ import { ZodError, type ZodType } from "zod";
 export const validateCredentials = (zodValidationSchema: ZodType) => {
     return (request: Request, response: Response, next: NextFunction): void => {
         try {
+            console.log(request.body)
             zodValidationSchema.parse(request.body);
             next();
         } catch (error) {
