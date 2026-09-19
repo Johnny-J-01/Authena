@@ -14,4 +14,4 @@ const createUser = async (data: {username: string, email: string, passwordHash: 
     return result; 
 }
 
-    export {findUserByEmail, createUser}; 
+export {findUserByEmail, createUser}; 
