@@ -29,3 +29,7 @@ export const verifyAccessToken = (token: string) : {userId: number, role: string
         return null; 
     }
 }
+
+export const generateVerificationToken = () : string => {
+    return crypto.randomBytes(64).toString('hex'); 
+}

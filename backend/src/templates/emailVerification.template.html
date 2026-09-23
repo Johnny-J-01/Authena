@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify Your Email</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-[#080808] font-sans text-white">
+
+  <div class="min-h-screen flex items-center justify-center px-5 py-12">
+
+    <div class="w-full max-w-[520px]">
+
+      <!-- Brand -->
+      <div class="mb-10 text-center text-yellow-400">
+        <h1 class="text-2xl font-extrabold tracking-tight">
+          Authena
+        </h1>
+      </div>
+
+      <!-- Main Card -->
+      <div
+        class="rounded-2xl border border-white/10 bg-[#0d0d0d] px-8 py-10 shadow-2xl"
+      >
+
+        <!-- Accent -->
+        <div class="mb-8 flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-blue-500"></span>
+          <span class="h-2 w-2 rounded-full bg-yellow-400"></span>
+          <span class="h-2 w-2 rounded-full bg-red-500"></span>
+        </div>
+
+        <!-- Heading -->
+        <h2 class="text-3xl font-extrabold leading-tight tracking-tight">
+          Verify your
+          <span class="text-yellow-400">email.</span>
+        </h2>
+
+        <!-- Message -->
+        <p class="mt-5 text-base leading-7 text-gray-400">
+          Thanks for creating an account. Before you get started,
+          we just need to make sure this email address belongs to you.
+        </p>
+
+        <p class="mt-4 text-base leading-7 text-gray-400">
+          Click the button below to verify your email address.
+        </p>
+
+        <!-- Button -->
+        <div class="mt-8">
+          <a
+            href="http://localhost:3000/api/verify/email"
+            class="inline-block rounded-lg bg-yellow-500 px-6 py-3.5 text-sm font-bold text-black transition hover:bg-yellow-400"
+          >
+            Verify Email
+          </a>
+        </div>
+
+        <!-- Expiry -->
+        <p class="mt-8 text-xs text-gray-600">
+          This verification link will expire after a 10 minutes.
+        </p>
+
+      </div>
+
+      <!-- Footer -->
+      <p class="mt-6 text-center text-xs text-gray-600">
+        If you didn't create this account, you can safely ignore this email.
+      </p>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

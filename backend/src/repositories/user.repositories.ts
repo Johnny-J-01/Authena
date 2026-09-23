@@ -1,4 +1,5 @@
 import { db } from "../config/db.js";
+import { hashPassword } from "../utils/password.utils.js";
 
 const findUserByEmail = async (email: string) => { 
     const result = await db.user.findUnique({
