@@ -6,12 +6,19 @@ import { hashPassword } from "../utils/password.utils.js";
 export const resetPassword = async (data: {token: string, password: string}) : Promise< {status: string, message : string } > => {
     const hashedToken = hashToken(data.token); 
     const result = await findVerificationTokenByHash(hashedToken); 
+    console.log("result: ", result);
     if (result === null || result.usedAt !== null || result.type !== VerificationType.PASSWORD_RESET || result.expiresAt < new Date()) {
-        throw new Error ("Reset password link has expired"); 
+        return {
+            status: "failed", 
+            message: "fail to reset the password"
+        } 
     }
 
-    const hashedPassword = await hashPassword(data.password); 
+    console.log(data);
+    const hashedPassword : string = await hashPassword(data.password); 
+    console.log("hashed passwrod: ", hashedPassword);
     const updatePasswordResult = await updateUserPassword(result.userId, hashedPassword); 
+    console.log("updatePassowrdRseult: ", updatePasswordResult);
     const markVerificationTokenUsedResult = await markVerificationTokenUsed(result.id); 
     const revokeAllUserRefreshTokensResult = await revokeAllUserRefreshTokens(result.userId);
 

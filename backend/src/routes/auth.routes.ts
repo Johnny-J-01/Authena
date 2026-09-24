@@ -5,13 +5,15 @@ import { validateCredentials } from '../middlewares/validate.middlewares.js';
 import { loginSchema, registerSchema } from '../validators/auth.validators.js';
 import { forgotPasswordController } from '../controllers/forgotPassword.controller.js';
 import { resetPasswordController } from '../controllers/resetPassword.controller.js';
+import { forgotPasswordSchema } from '../validators/forgotPassword.validator.js';
+import { resetPasswordSchema } from '../validators/resetPassword.validator.js';
 
 const router = express.Router();
 
 router.post('/register', validateCredentials(registerSchema), registerController); 
 router.post('/login', validateCredentials(loginSchema), loginController); 
 router.post('/verify-email', validateCredentials(loginSchema), emailVerificationController); 
-router.post('/forgot-password', validateCredentials(loginSchema), forgotPasswordController); 
-router.post('/reset-password', validateCredentials(loginSchema), resetPasswordController); 
+router.post('/forgot-password', validateCredentials(forgotPasswordSchema), forgotPasswordController); 
+router.post('/reset-password', validateCredentials(resetPasswordSchema), resetPasswordController); 
 
 export default router; 

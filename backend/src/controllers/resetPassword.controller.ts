@@ -1,28 +1,32 @@
 import type { NextFunction, Request, Response } from "express";
 import { resetPassword } from "../services/resetPassword.services.js";
 
-export const resetPasswordController = async (request: Request, response: Response, next: NextFunction) : Promise <void> => {
+export const resetPasswordController = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     try {
-        const password = request.body; 
-        const token : string = request.query["token"]; 
-
-        if (!token || !password) {
+        const result = request.body;
+        const token = request.query["token"];
+        if (!token || typeof token !== "string") {
+            response.status(400).json({ status: "fail", message: "Token is missing or invalid" });
+            return;
+        }
+        if (!token || !result) {
             response.status(404).json({
-                status: "Fail", 
-                message: "Invalid token or token has been expired"
-            })
+                status: "Fail",
+                message: "Invalid token or token has been expired",
+            });
         }
 
-        const resetPasswordResult = await resetPassword({token, password}); 
+        console.log(result);
+        const password = result.password;
+        const resetPasswordResult = await resetPassword({ token, password});
         if (resetPasswordResult.status !== "success") {
-            response.status(400).json(resetPasswordResult); 
+            response.status(400).json(resetPasswordResult);
         }
-        response.status(400).json(resetPasswordResult); 
-    }
-    catch (error) {
+        response.status(200).json(resetPasswordResult);
+    } catch (error) {
         response.status(400).json({
             status: "Fail",
-            message: "Failed to reset the password"
-        })
+            message: "Failed to reset the password",
+        });
     }
-}
+};

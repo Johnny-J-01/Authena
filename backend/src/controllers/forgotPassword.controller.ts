@@ -5,7 +5,7 @@ export const forgotPasswordController = async (request: Request, response: Respo
     try { 
         const email = request.body; 
         console.log("forgot password email data: ", email);
-        const forgotPasswordServiceResult = await forgotPassword(email);
+        const forgotPasswordServiceResult = await forgotPassword(email.email);
         if (forgotPasswordServiceResult.status !== "success") {
             response.status(404).json(forgotPasswordServiceResult); 
         }  

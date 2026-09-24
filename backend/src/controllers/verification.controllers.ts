@@ -5,7 +5,11 @@ import { emailVerification } from "../services/verification.services.js";
 
 export const emailVerificationController = async (request: Request, response: Response, next: NextFunction) => {
     try { 
-        const verificationToken : string = request.query['token-hash']; 
+        const verificationToken = request.query['token-hash']; 
+        if (!verificationToken || typeof verificationToken !== "string") {
+            response.status(400).json({ status: "fail", message: "Token is missing or invalid" });
+            return;
+        }
         const result = await emailVerification(verificationToken); 
         if (result.status !== 'success') {
             response.status(400).json({
