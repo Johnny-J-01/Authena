@@ -10,7 +10,7 @@ export const forgotPassword = async (email: string): Promise<{ status: string; m
         const result = await findUserByEmail(email); 
         console.log("resut:", result);
         if (result === null) {
-            throw new Error("If the email exists, a reset password link has been sent to the email"); 
+            return { status: "success", message: "If the email exists, a reset password link has been sent" }; 
         }
         const forgotPasswordToken = generateVerificationToken(); 
         const forgotPasswordTokenHash = hashToken(forgotPasswordToken); 
