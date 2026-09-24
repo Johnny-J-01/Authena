@@ -7,6 +7,7 @@ import { forgotPasswordController } from '../controllers/forgotPassword.controll
 import { resetPasswordController } from '../controllers/resetPassword.controller.js';
 import { forgotPasswordSchema } from '../validators/forgotPassword.validator.js';
 import { resetPasswordSchema } from '../validators/resetPassword.validator.js';
+import { refreshTokenController } from '../controllers/refreshToken.controllers.js';
 
 const router = express.Router();
 
@@ -15,5 +16,6 @@ router.post('/login', validateCredentials(loginSchema), loginController);
 router.post('/verify-email', validateCredentials(loginSchema), emailVerificationController); 
 router.post('/forgot-password', validateCredentials(forgotPasswordSchema), forgotPasswordController); 
 router.post('/reset-password', validateCredentials(resetPasswordSchema), resetPasswordController); 
+router.post('/refresh', refreshTokenController); 
 
 export default router; 
