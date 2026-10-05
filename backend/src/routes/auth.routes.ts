@@ -10,15 +10,18 @@ import { resetPasswordSchema } from "../validators/resetPassword.validator.js";
 import { refreshTokenController } from "../controllers/refreshToken.controllers.js";
 import { authenticateTokenMiddleWare } from "../middlewares/auth.middlewares.js";
 import { getMeController } from "../controllers/authSecurity.controllers.js";
+import { globalAuthLimiter, loginLimiter, registerLimiter, sensitiveActionLimiter } from "../middlewares/rateLimiter.middlewares.js";
 
 const router = express.Router();
 
-router.post("/register", validateCredentials(registerSchema), registerController);
-router.post("/login", validateCredentials(loginSchema), loginController);
+router.use(globalAuthLimiter); 
+
+router.post("/register", registerLimiter, validateCredentials(registerSchema), registerController);
+router.post("/login", loginLimiter, validateCredentials(loginSchema), loginController);
 router.get('/me', authenticateTokenMiddleWare, getMeController); 
 router.post("/logout", logoutController);
-router.post("/verify-email", emailVerificationController);
-router.post("/forgot-password", validateCredentials(forgotPasswordSchema), forgotPasswordController);
+router.post("/verify-email", sensitiveActionLimiter,emailVerificationController);
+router.post("/forgot-password", sensitiveActionLimiter, validateCredentials(forgotPasswordSchema), forgotPasswordController);
 router.post("/reset-password", validateCredentials(resetPasswordSchema), resetPasswordController);
 router.post("/refresh", refreshTokenController);
 

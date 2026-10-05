@@ -9,6 +9,7 @@ import { GlobalErrorHandler } from './middlewares/GlobalErrorHandler.middlewares
 import AuthRouter from './routes/auth.routes.js'; 
 
 const app = express(); 
+app.set("trust proxy", 1);
 
 app.use(helmet()); 
 app.use(cors({
