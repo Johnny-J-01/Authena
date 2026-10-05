@@ -1,5 +1,5 @@
 import express from "express";
-import { loginController, registerController } from "../controllers/auth.controllers.js";
+import { loginController, logoutController, registerController } from "../controllers/auth.controllers.js";
 import { emailVerificationController } from "../controllers/verification.controllers.js";
 import { validateCredentials } from "../middlewares/validate.middlewares.js";
 import { loginSchema, registerSchema } from "../validators/auth.validators.js";
@@ -8,11 +8,15 @@ import { resetPasswordController } from "../controllers/resetPassword.controller
 import { forgotPasswordSchema } from "../validators/forgotPassword.validator.js";
 import { resetPasswordSchema } from "../validators/resetPassword.validator.js";
 import { refreshTokenController } from "../controllers/refreshToken.controllers.js";
+import { authenticateTokenMiddleWare } from "../middlewares/auth.middlewares.js";
+import { getMeController } from "../controllers/authSecurity.controllers.js";
 
 const router = express.Router();
 
 router.post("/register", validateCredentials(registerSchema), registerController);
 router.post("/login", validateCredentials(loginSchema), loginController);
+router.get('/me', authenticateTokenMiddleWare, getMeController); 
+router.post("/logout", logoutController);
 router.post("/verify-email", emailVerificationController);
 router.post("/forgot-password", validateCredentials(forgotPasswordSchema), forgotPasswordController);
 router.post("/reset-password", validateCredentials(resetPasswordSchema), resetPasswordController);

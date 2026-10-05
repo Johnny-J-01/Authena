@@ -97,6 +97,7 @@ export const loginUser = async (data: loginDataSchema): Promise<{ user: Omit<Use
 
 export const logoutUser = async (token: string) => {
     try {
+        if (!token) return { status: "success" };
         const hashedRefreshToken = hashToken(token); 
         const isVerifyRefreshToken = await findRefreshTokenByHash(hashedRefreshToken); 
         if (isVerifyRefreshToken === null) {
