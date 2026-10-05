@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
-import { registerUser, loginUser } from "../services/auth.services.js";
+import { registerUser, loginUser, logoutUser } from "../services/auth.services.js";
 import { env } from "../config/env.js";
+import type { PrismaPromise } from "@prisma/client";
 
 export const registerController = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     try {
@@ -43,5 +44,25 @@ export const loginController = async (request: Request, response: Response, next
     }
 };
   
-
-
+export const logoutController = async (request: Request, response: Response, next: NextFunction) : Promise<void> => {
+    try {
+        const token = request.cookies.refreshToken; 
+        const result = await logoutUser(token); 
+        if (result.status !== "success") {
+            response.status(400).json({
+                message: "Failed to logout"
+            }); 
+            return; 
+        }
+        response.clearCookie('refreshToken', {
+            path: '/api/auth',
+        }); 
+        response.status(200).json({
+            status: "success", 
+            message: "Successfully logged out"
+        }); 
+    }
+    catch (error) {
+        next(error); 
+    }
+}

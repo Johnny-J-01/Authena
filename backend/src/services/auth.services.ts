@@ -3,8 +3,8 @@ import { hashPassword, verifyPassword } from "../utils/password.utils.js";
 import { VerificationType, type User } from "@prisma/client";
 import type { RefreshToken } from "@prisma/client";
 import { generateRefreshToken, generateVerificationToken, hashToken, signAccessToken } from "../utils/tokens.utils.js";
-import { createRefreshTokenRecord } from "../repositories/tokens.respository.js";
-import { createVerificationToken } from "../repositories/verification.repositories.js";
+import { createRefreshTokenRecord, findRefreshTokenByHash, revokeRefreshToken } from "../repositories/tokens.respository.js";
+import { createVerificationToken, revokeAllUserRefreshTokens } from "../repositories/verification.repositories.js";
 import { sendEmail } from "../utils/mailer.utils.js";
 
 export const registerUser = async (data: { username: string; email: string; password: string }): Promise<Omit<User, "passwordHash">> => {
@@ -94,3 +94,20 @@ export const loginUser = async (data: loginDataSchema): Promise<{ user: Omit<Use
         throw error;
     }
 };
+
+export const logoutUser = async (token: string) => {
+    try {
+        const hashedRefreshToken = hashToken(token); 
+        const isVerifyRefreshToken = await findRefreshTokenByHash(hashedRefreshToken); 
+        if (isVerifyRefreshToken === null) {
+            throw new Error("Failed to logout"); 
+        }
+        const revokeRefreshTokenResult = await revokeRefreshToken(isVerifyRefreshToken.id); 
+        return {
+            status: "success"
+        }
+    }
+    catch (error) {
+        throw error; 
+    }
+}
