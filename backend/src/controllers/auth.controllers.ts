@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { registerUser, loginUser, logoutUser } from "../services/auth.services.js";
 import { env } from "../config/env.js";
 import type { PrismaPromise } from "@prisma/client";
+import { generateCsrfToken } from "../middlewares/csrf.middlelwares.js";
 
 export const registerController = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     try {
@@ -65,4 +66,9 @@ export const logoutController = async (request: Request, response: Response, nex
     catch (error) {
         next(error); 
     }
+}
+
+export const getCsrfTokenController = (request: Request, response: Response) => {
+    const csrfToken = generateCsrfToken(request, response); 
+    response.status(200).json({ status: "success", csrfToken });
 }
