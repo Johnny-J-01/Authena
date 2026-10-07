@@ -1,5 +1,7 @@
+import { enableUser2FA } from "../repositories/user.repositories.js";
 import { findVerificationTokenByHash, markVerificationTokenUsed, updateUserEmailVerified } from "../repositories/verification.repositories.js";
 import { hashToken } from "../utils/tokens.utils.js";
+import { generateBackupCodes, verifyTotpCode } from "../utils/totp.utils.js";
 
 export const emailVerification = async (verificationToken: string) : Promise<{status: string, message: string}> => {
     const verificationTokenHash = hashToken(verificationToken);
@@ -15,3 +17,4 @@ export const emailVerification = async (verificationToken: string) : Promise<{st
         message: "Email verified successfully"
     }    
 }
+
