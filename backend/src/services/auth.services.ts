@@ -1,13 +1,13 @@
 import { findUserByEmail, createUser } from "../repositories/user.repositories.js";
 import { hashPassword, verifyPassword } from "../utils/password.utils.js";
-import { VerificationType, type User } from "@prisma/client";
-import type { RefreshToken } from "@prisma/client";
+import { VerificationType, AuditLogEventType, type User } from "@prisma/client";
 import { generateRefreshToken, generateVerificationToken, hashToken, signAccessToken, signTemp2faToken } from "../utils/tokens.utils.js";
 import { createRefreshTokenRecord, findRefreshTokenByHash, revokeRefreshToken } from "../repositories/tokens.respository.js";
-import { createVerificationToken, revokeAllUserRefreshTokens } from "../repositories/verification.repositories.js";
+import { createVerificationToken } from "../repositories/verification.repositories.js";
 import { sendEmail } from "../utils/mailer.utils.js";
+import { logAuditEvent } from "./auditLog.services.js";
 
-export const registerUser = async (data: { username: string; email: string; password: string }): Promise<Omit<User, "passwordHash">> => {
+export const registerUser = async (data: { username: string; email: string; password: string; clientIp?: string; userAgent?: string }): Promise<Omit<User, "passwordHash">> => {
     try {
         const result = await findUserByEmail(data.email);
         if (result !== null) {
@@ -29,7 +29,7 @@ export const registerUser = async (data: { username: string; email: string; pass
             expiresAt: new Date(Date.now() + 60 * 10 * 1000),
         };
 
-        const storeEmailVerificationToken = await createVerificationToken(emailVerificationTokenData);
+        await createVerificationToken(emailVerificationTokenData);
         const verificationLink = `http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}`;
         const sendEmailMetaData = {
             to: createUserResult.email,
@@ -38,6 +38,14 @@ export const registerUser = async (data: { username: string; email: string; pass
         };
 
         sendEmail(sendEmailMetaData);
+
+        // Audit Log: REGISTER
+        await logAuditEvent({
+            userId: createUserResult.id,
+            event: AuditLogEventType.REGISTER,
+            ip: data.clientIp || "127.0.0.1",
+            userAgent: data.userAgent,
+        });
 
         const { passwordHash: _, ...userWithoutPassword } = createUserResult;
         return userWithoutPassword;
@@ -50,6 +58,7 @@ interface loginDataSchema {
     email: string;
     password: string;
     clientIp: string;
+    userAgent?: string;
 }
 export const loginUser = async (data: loginDataSchema): Promise<
     | { user: Omit<User, "passwordHash">; accessToken: string; refreshToken: string }
@@ -58,19 +67,31 @@ export const loginUser = async (data: loginDataSchema): Promise<
     try {
         const existUserResult = await findUserByEmail(data.email);
         if (existUserResult === null) {
+            await logAuditEvent({
+                userId: null,
+                event: AuditLogEventType.LOGIN_FAILED,
+                ip: data.clientIp,
+                userAgent: data.userAgent,
+            });
             throw new Error("Invalid Email or password");
         }
         const verifyPasswordResult = await verifyPassword(existUserResult.passwordHash, data.password);
         if (verifyPasswordResult === false) {
+            await logAuditEvent({
+                userId: existUserResult.id,
+                event: AuditLogEventType.LOGIN_FAILED,
+                ip: data.clientIp,
+                userAgent: data.userAgent,
+            });
             throw new Error("Invalid email or password");
         }
 
         if ((existUserResult as User & { isTwoFactorEnabled?: boolean }).isTwoFactorEnabled) {
-            const tempToken = signTemp2faToken({userId: existUserResult.id}); 
+            const tempToken = signTemp2faToken({ userId: existUserResult.id });
             return {
-                requires2FA: true as const, 
+                requires2FA: true as const,
                 tempToken,
-            }
+            };
         }
 
         const accessToken = signAccessToken({ userId: existUserResult.id, role: existUserResult.role });
@@ -78,14 +99,20 @@ export const loginUser = async (data: loginDataSchema): Promise<
         const hashedRefreshToken = hashToken(refreshToken);
         const expiresAt: Date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
 
-        const createRefreshTokenResult = await createRefreshTokenRecord({
+        await createRefreshTokenRecord({
             userId: existUserResult.id,
             tokenHash: hashedRefreshToken,
             expiresAt: expiresAt,
             createdByIp: data.clientIp,
         });
 
-        console.log(`The refreshToken record has been created, the data is : ${createRefreshTokenResult}`);
+        // Audit Log: LOGIN_SUCCESS
+        await logAuditEvent({
+            userId: existUserResult.id,
+            event: AuditLogEventType.LOGIN_SUCCESS,
+            ip: data.clientIp,
+            userAgent: data.userAgent,
+        });
 
         const { passwordHash: _, ...userWithoutPassword } = existUserResult;
         return {
@@ -98,20 +125,28 @@ export const loginUser = async (data: loginDataSchema): Promise<
     }
 };
 
-export const logoutUser = async (token: string) => {
+export const logoutUser = async (token: string, clientIp: string = "127.0.0.1", userAgent?: string) => {
     try {
         if (!token) return { status: "success" };
-        const hashedRefreshToken = hashToken(token); 
-        const isVerifyRefreshToken = await findRefreshTokenByHash(hashedRefreshToken); 
+        const hashedRefreshToken = hashToken(token);
+        const isVerifyRefreshToken = await findRefreshTokenByHash(hashedRefreshToken);
         if (isVerifyRefreshToken === null) {
-            throw new Error("Failed to logout"); 
+            throw new Error("Failed to logout");
         }
-        const revokeRefreshTokenResult = await revokeRefreshToken(isVerifyRefreshToken.id); 
+        await revokeRefreshToken(isVerifyRefreshToken.id);
+
+        // Audit Log: LOGOUT
+        await logAuditEvent({
+            userId: isVerifyRefreshToken.userId,
+            event: AuditLogEventType.LOGOUT,
+            ip: clientIp,
+            userAgent: userAgent,
+        });
+
         return {
-            status: "success"
-        }
+            status: "success",
+        };
+    } catch (error) {
+        throw error;
     }
-    catch (error) {
-        throw error; 
-    }
-}
+};

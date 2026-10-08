@@ -1,7 +1,9 @@
+import { AuditLogEventType } from "@prisma/client";
 import { createRefreshTokenRecord } from "../repositories/tokens.respository.js";
 import { enableUser2FA, findUserById } from "../repositories/user.repositories.js";
 import { generateRefreshToken, hashToken, signAccessToken, verifyTemp2faToken } from "../utils/tokens.utils.js";
 import { generateBackupCodes, generateQrCodeUrl, generateTotpSecret, verifyTotpCode } from "../utils/totp.utils.js";
+import { logAuditEvent } from "./auditLog.services.js";
 
 export const setUp2faService = async (userId: number) => {
     try { 
@@ -20,7 +22,7 @@ export const setUp2faService = async (userId: number) => {
 }
 
 
-export const verifySetup2faService = async (userId: number, code: string, secret: string) => {
+export const verifySetup2faService = async (userId: number, code: string, secret: string, clientIp: string = "127.0.0.1") => {
     const isValid = await verifyTotpCode(code, secret);
     if (!isValid) {
         return { status: "failed", message: "Invalid 2FA code. Please try again." };
@@ -29,6 +31,12 @@ export const verifySetup2faService = async (userId: number, code: string, secret
     const { plainCodes, hashedCodes } = generateBackupCodes();
 
     await enableUser2FA(userId, secret, hashedCodes);
+
+    await logAuditEvent({
+        userId,
+        event: AuditLogEventType.TWO_FACTOR_ENABLED,
+        ip: clientIp,
+    });
 
     return {
         status: "success",
@@ -59,6 +67,12 @@ export const verifyLogin2faService = async (tempToken: string, code: string, cli
         tokenHash: hashToken(refreshToken),
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
         createdByIp: clientIp,
+    });
+
+    await logAuditEvent({
+        userId: user.id,
+        event: AuditLogEventType.LOGIN_SUCCESS,
+        ip: clientIp,
     });
 
     const { passwordHash: _, twoFactorSecret: __, backupCodes: ___, ...safeUser } = user;

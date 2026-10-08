@@ -1,7 +1,9 @@
+import { AuditLogEventType } from "@prisma/client";
 import { createRefreshTokenRecord, findRefreshTokenByHash, revokeRefreshToken } from "../repositories/tokens.respository.js";
 import { findUserByEmail, findUserById } from "../repositories/user.repositories.js";
 import { revokeAllUserRefreshTokens } from "../repositories/verification.repositories.js";
 import { generateRefreshToken, hashToken, signAccessToken } from "../utils/tokens.utils.js";
+import { logAuditEvent } from "./auditLog.services.js";
 
 export const refreshTokenService = async (token: string): Promise<{ status: string; message: string; accessToken?: string; refreshToken?: string }> => {
     try {
@@ -21,7 +23,12 @@ export const refreshTokenService = async (token: string): Promise<{ status: stri
         }
 
         if (savedRefreshToken.revokedAt !== null) {
-            const result = await revokeAllUserRefreshTokens(savedRefreshToken.userId);
+            await logAuditEvent({
+                userId: savedRefreshToken.userId,
+                event: AuditLogEventType.TOKEN_REUSE_DETECTED,
+                ip: savedRefreshToken.createdByIp,
+            });
+            await revokeAllUserRefreshTokens(savedRefreshToken.userId);
             return {
                 status: "Fail",
                 message: "If refresh token is valid, new refresh and access token has been sent",

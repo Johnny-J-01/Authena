@@ -68,11 +68,20 @@ model VerificationToken {
 }
 
 enum AuditLogEventType {
+  REGISTER
   LOGIN_SUCCESS
   LOGIN_FAILED
-  REGISTER
-  PASSWORD_RESET
+  LOGOUT
+  EMAIL_VERIFIED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  PASSWORD_CHANGED
+  TWO_FACTOR_ENABLED
+  TWO_FACTOR_DISABLED
+  TOKEN_REUSE_DETECTED
+  ACCOUNT_LOCKED
 }
+
 
 model AuditLog {
   id        Int               @id @default(autoincrement())

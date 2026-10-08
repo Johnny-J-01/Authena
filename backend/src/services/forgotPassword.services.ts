@@ -2,9 +2,10 @@ import { findUserByEmail } from "../repositories/user.repositories.js";
 import { createVerificationToken } from "../repositories/verification.repositories.js";
 import { sendEmail } from "../utils/mailer.utils.js";
 import { generateVerificationToken, hashToken } from "../utils/tokens.utils.js";
-import { VerificationType } from "@prisma/client";
+import { AuditLogEventType, VerificationType } from "@prisma/client";
+import { logAuditEvent } from "./auditLog.services.js";
 
-export const forgotPassword = async (email: string): Promise<{ status: string; message: string }> => {
+export const forgotPassword = async (email: string, clientIp: string = "127.0.0.1"): Promise<{ status: string; message: string }> => {
     try {
 
         const result = await findUserByEmail(email); 
@@ -32,7 +33,13 @@ export const forgotPassword = async (email: string): Promise<{ status: string; m
         }
     
     
-        sendEmail(sendEmailData); 
+        await sendEmail(sendEmailData); 
+        await logAuditEvent({
+            userId: result.id,
+            event: AuditLogEventType.PASSWORD_RESET_REQUESTED,
+            ip: clientIp,
+        });
+
         return {
             status: "success", 
             message: "If the email exists, a reset password link has been sent to the email"
