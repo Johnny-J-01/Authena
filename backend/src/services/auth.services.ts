@@ -87,17 +87,9 @@ export const loginUser = async (data: loginDataSchema): Promise<
 
         console.log(`The refreshToken record has been created, the data is : ${createRefreshTokenResult}`);
 
-        const destructuredUserPasswordHash = {
-            id: existUserResult.id,
-            username: existUserResult.username,
-            email: existUserResult.email,
-            isEmailVerified: existUserResult.isEmailVerified,
-            role: existUserResult.role,
-            createdAt: existUserResult.createdAt,
-            updatedAt: existUserResult.updatedAt,
-        };
+        const { passwordHash: _, ...userWithoutPassword } = existUserResult;
         return {
-            user: destructuredUserPasswordHash,
+            user: userWithoutPassword,
             accessToken: accessToken,
             refreshToken: refreshToken,
         };

@@ -12,7 +12,7 @@ import { authenticateTokenMiddleWare } from "../middlewares/auth.middlewares.js"
 import { getMeController } from "../controllers/authSecurity.controllers.js";
 import { globalAuthLimiter, loginLimiter, registerLimiter, sensitiveActionLimiter } from "../middlewares/rateLimiter.middlewares.js";
 import { doubleCsrfProtection } from "../middlewares/csrf.middlelwares.js";
-import { setUp2faController, verifySetup2faController } from "../controllers/twoFactor.controllers.js";
+import { setUp2faController, verifyLogin2faController, verifySetup2faController } from "../controllers/twoFactor.controllers.js";
 
 const router = express.Router();
 
@@ -25,6 +25,7 @@ router.post("/login", loginLimiter, validateCredentials(loginSchema), loginContr
 router.get('/me', authenticateTokenMiddleWare, getMeController); 
 router.post('/2fa/setup', authenticateTokenMiddleWare, setUp2faController); 
 router.post('/2fa/verify-setup', authenticateTokenMiddleWare, verifySetup2faController); 
+router.post("/2fa/verify-login", sensitiveActionLimiter, verifyLogin2faController);
 router.post("/logout", logoutController);
 router.post("/verify-email", sensitiveActionLimiter,emailVerificationController);
 router.post("/forgot-password", sensitiveActionLimiter, validateCredentials(forgotPasswordSchema), forgotPasswordController);
