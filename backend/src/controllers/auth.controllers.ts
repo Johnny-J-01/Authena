@@ -25,6 +25,14 @@ export const loginController = async (request: Request, response: Response, next
         const clientIp = request.ip || "127.0.0.1";
 
         const loggedInResult = await loginUser({ email, password, clientIp });
+        if ("tempToken" in loggedInResult) {
+            response.status(200).json({
+                status: "2fa_required",
+                message: "Two-factor authentication required",
+                tempToken: loggedInResult.tempToken,
+            });
+            return;
+        }
         const loggedInUser = loggedInResult.user;
         const accessToken = loggedInResult.accessToken;
         const refreshToken = loggedInResult.refreshToken;

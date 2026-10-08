@@ -2,7 +2,7 @@ import { findUserByEmail, createUser } from "../repositories/user.repositories.j
 import { hashPassword, verifyPassword } from "../utils/password.utils.js";
 import { VerificationType, type User } from "@prisma/client";
 import type { RefreshToken } from "@prisma/client";
-import { generateRefreshToken, generateVerificationToken, hashToken, signAccessToken } from "../utils/tokens.utils.js";
+import { generateRefreshToken, generateVerificationToken, hashToken, signAccessToken, signTemp2faToken } from "../utils/tokens.utils.js";
 import { createRefreshTokenRecord, findRefreshTokenByHash, revokeRefreshToken } from "../repositories/tokens.respository.js";
 import { createVerificationToken, revokeAllUserRefreshTokens } from "../repositories/verification.repositories.js";
 import { sendEmail } from "../utils/mailer.utils.js";
@@ -51,7 +51,10 @@ interface loginDataSchema {
     password: string;
     clientIp: string;
 }
-export const loginUser = async (data: loginDataSchema): Promise<{ user: Omit<User, "passwordHash">; accessToken: string; refreshToken: string }> => {
+export const loginUser = async (data: loginDataSchema): Promise<
+    | { user: Omit<User, "passwordHash">; accessToken: string; refreshToken: string }
+    | { requires2FA: true; tempToken: string }
+> => {
     try {
         const existUserResult = await findUserByEmail(data.email);
         if (existUserResult === null) {
@@ -60,6 +63,14 @@ export const loginUser = async (data: loginDataSchema): Promise<{ user: Omit<Use
         const verifyPasswordResult = await verifyPassword(existUserResult.passwordHash, data.password);
         if (verifyPasswordResult === false) {
             throw new Error("Invalid email or password");
+        }
+
+        if ((existUserResult as User & { isTwoFactorEnabled?: boolean }).isTwoFactorEnabled) {
+            const tempToken = signTemp2faToken({userId: existUserResult.id}); 
+            return {
+                requires2FA: true as const, 
+                tempToken,
+            }
         }
 
         const accessToken = signAccessToken({ userId: existUserResult.id, role: existUserResult.role });

@@ -33,3 +33,23 @@ export const verifyAccessToken = (token: string) : {userId: number, role: string
 export const generateVerificationToken = () : string => {
     return crypto.randomBytes(64).toString('hex'); 
 }
+
+
+export const signTemp2faToken = (payload: { userId: number }): string => {
+    return jwt.sign(
+        { ...payload, stage: "2FA_PENDING" },
+        env.JWT_ACCESS_SECRET,
+        { expiresIn: "5m", algorithm: "HS256" }
+    );
+};
+export const verifyTemp2faToken = (token: string): { userId: number; stage: string } | null => {
+    try {
+        const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET, {
+            algorithms: ["HS256"],
+        }) as { userId: number; stage: string };
+        if (decoded.stage !== "2FA_PENDING") return null;
+        return decoded;
+    } catch {
+        return null;
+    }
+};
