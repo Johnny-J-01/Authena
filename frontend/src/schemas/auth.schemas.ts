@@ -23,7 +23,16 @@ export const resetPasswordSchema = z.object({
     path: ["confirmPassword"],
 });
 
+export const twoFactorCodeSchema = z.object({
+    code: z
+        .string()
+        .min(6, "Code must be at least 6 characters")
+        .max(12, "Code must not exceed 12 characters")
+        .regex(/^[a-zA-Z0-9]+$/, "Code must be alphanumeric"),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type TwoFactorCodeInput = z.infer<typeof twoFactorCodeSchema>;
