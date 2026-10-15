@@ -19,8 +19,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 // Fetch user identity using the fresh access token
                 try {
                     const meData = await getMeApi();
-                    if (meData?.user) {
-                        setAuth(refreshData.accessToken, meData.user);
+                    const user = meData?.data?.user ?? meData?.user;
+                    if (user) {
+                        setAuth(refreshData.accessToken, user);
                     }
                 } catch {
                     // Even if getMe fails, the token is valid; user state can be loaded lazily

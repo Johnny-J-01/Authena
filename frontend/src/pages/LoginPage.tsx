@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { loginSchema, type LoginInput } from "../schemas/auth.schemas";
 import { loginApi } from "../api/auth.api";
 import { useAuthStore } from "../store/authStore";
@@ -18,7 +18,10 @@ import {
 
 export const LoginPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const setAuth = useAuthStore((s) => s.setAuth);
+
+    const from = (location.state as { from?: Location })?.from?.pathname || "/dashboard";
 
     const {
         register,
@@ -38,12 +41,12 @@ export const LoginPage = () => {
             const result = await loginApi(data);
 
             if (result.status === "2fa_required") {
-                navigate("/2fa-verify", { state: { tempToken: result.tempToken } });
+                navigate("/2fa-verify", { state: { tempToken: result.tempToken, from } });
                 return;
             }
 
             setAuth(result.data.accessToken, result.data.user);
-            navigate("/dashboard");
+            navigate(from, { replace: true });
         } catch {
             setError("root", { message: "Invalid email or password. Please check your credentials." });
         }
